@@ -1,0 +1,8 @@
+services:
+  signverse:
+    build:
+      context: .
+      dockerfile: Dockerfile.deploy
+    ports:
+      - "8080:80"
+    restart: unless-stopped
