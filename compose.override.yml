@@ -1,0 +1,4 @@
+services:
+  signverse:
+    build:
+      dockerfile: Dockerfile.production

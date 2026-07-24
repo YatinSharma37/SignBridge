@@ -2,421 +2,392 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Convert Text to Handgesture</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="icon" href="file:///C:/Users/4robi/Desktop/IP%20II%20Project/project/pictures/icon.png" type="image/png" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Audiowide&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SignVerse — Gesture Translator</title>
+  <meta name="description" content="Real-time text to sign language gesture animation. Watch sign.mt translate your text into 3D avatars." />
+  <link rel="icon" href="/pictures/icon.png" type="image/png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <style>
-     body {
-      margin: 0;
-      height: 100vh;
-      background: linear-gradient(to bottom right, #f0f0f0 0%, #fff9db 70%, #ffe4ec 100%);
-      font-family: Arial, Helvetica, sans-serif;
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0f1e;
+      --surface: rgba(255,255,255,0.05);
+      --border: rgba(255,255,255,0.1);
+      --blue: #3b82f6;
+      --blue-glow: rgba(59,130,246,0.25);
+      --cyan: #06b6d4;
+      --purple: #8b5cf6;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --radius: 16px;
     }
 
+    html, body { height: 100%; font-family: 'Inter', sans-serif; }
+
+    body {
+      min-height: 100vh;
+      background: radial-gradient(ellipse at 20% 20%, #1e1b4b 0%, transparent 55%),
+                  radial-gradient(ellipse at 80% 80%, #0f2040 0%, transparent 55%),
+                  #0a0f1e;
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Navbar ── */
     header {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      background-color: white;
-      border-bottom: 1px solid #e5e7eb;
-      z-index: 1000;
+      position: fixed; top: 0; left: 0; width: 100%; z-index: 100;
+      background: rgba(10,15,30,0.85); backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
     }
-
     nav {
-      max-width: 1515px;
-      margin: 0 auto;
-      padding: 0 1rem;
-      height: 64px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+      max-width: 1200px; margin: 0 auto; padding: 0 1.5rem;
+      height: 64px; display: flex; align-items: center; justify-content: space-between;
     }
-
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      text-decoration: none;
-    }
-
-    .logo svg {
-      color: #2563eb;
-    }
-
-    .logo span {
-      font-size: 1.25rem;
-      font-weight: bold;
-      color: #111827;
-    }
-
-    .nav-links {
-      display: flex;
-      align-items: center;
-      gap: 1.5rem;
-    }
-
+    .logo { display: flex; align-items: center; gap: 0.5rem; text-decoration: none; }
+    .logo svg { color: var(--blue); }
+    .logo span { font-size: 1.2rem; font-weight: 700; color: var(--text); }
+    .nav-links { display: flex; align-items: center; gap: 0.25rem; }
     .nav-links a {
-      color: #4b5563;
-      font-size: 0.9rem;
-      display: flex;
-      align-items: center;
-      gap: 0.3rem;
-      text-decoration: none;
-      transition: color 0.3s ease;
+      display: flex; align-items: center; gap: 0.35rem; padding: 0.4rem 0.75rem;
+      border-radius: 8px; text-decoration: none; color: var(--muted);
+      font-size: 0.875rem; font-weight: 500; transition: all 0.2s;
     }
+    .nav-links a:hover, .nav-links a.active { color: var(--blue); background: rgba(59,130,246,0.1); }
+    @media (max-width: 640px) { .nav-links { display: none; } }
 
-    .nav-links a:hover {
-      color: #2563eb;
-    }
-
-    @media (max-width: 768px) {
-      .nav-links {
-        display: none;
-      }
-    }
-
+    /* ── Main Layout ── */
     main {
-      flex-grow: 1;
-      margin-top: 64px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 1rem;
+      flex: 1; padding-top: 64px; display: flex; flex-direction: column;
     }
 
-    .iframe-container {
-      width: 100%;
-      max-width: 900px;
-      height: 80vh;
-      overflow: hidden;
-      border-radius: 10px;
+    /* ── Hero bar ── */
+    .hero-bar {
+      background: linear-gradient(135deg, rgba(59,130,246,0.12), rgba(139,92,246,0.12));
+      border-bottom: 1px solid var(--border);
+      padding: 1.25rem 1.5rem;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 1rem;
+      max-width: 100%;
+    }
+    .hero-bar-text h1 {
+      font-size: clamp(1.1rem, 3vw, 1.4rem); font-weight: 700;
+      background: linear-gradient(135deg, #fff 40%, var(--cyan));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .hero-bar-text p { font-size: 0.8rem; color: var(--muted); margin-top: 0.2rem; }
+    .hero-badges { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .badge {
+      display: flex; align-items: center; gap: 0.35rem;
+      padding: 0.3rem 0.75rem; border-radius: 999px; font-size: 0.72rem; font-weight: 600;
+      background: rgba(255,255,255,0.06); border: 1px solid var(--border); color: var(--muted);
+    }
+    .badge.live { background: rgba(34,197,94,0.1); border-color: rgba(34,197,94,0.25); color: #4ade80; }
+    .badge.live::before { content: ''; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #4ade80; animation: pulse 1.2s infinite; }
+
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.7)} }
+
+    /* ── Content area ── */
+    .content-wrap {
+      flex: 1; display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 0;
+    }
+    @media (max-width: 900px) { .content-wrap { grid-template-columns: 1fr; } }
+
+    /* ── Iframe panel ── */
+    .iframe-panel {
       position: relative;
-      background-color: white;
-      box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+      background: #000;
+      min-height: calc(100vh - 160px);
     }
 
-    .iframe-container iframe {
-      position: absolute;
-      top: -60px;
-      left: 0;
-      width: 100%;
-      height: calc(100% + 238px);
+    #sign-language-iframe {
+      position: absolute; inset: 0; width: 100%; height: 100%;
       border: none;
     }
 
-    .fullscreen-button {
-      position: absolute;
-      top: 12px;
-      right: 12px;
-      background-color: transparent;
-      color: white;
-      padding: 0.4rem 0.75rem;
-      border-radius: 0.375rem;
-      font-weight: 600;
-      font-size: 0.875rem;
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-      z-index: 10;
-      border: 2px solid transparent;
+    /* Loading overlay */
+    .loading-overlay {
+      position: absolute; inset: 0;
+      background: var(--bg);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 1rem; z-index: 10; transition: opacity 0.4s;
+    }
+    .loading-overlay.hidden { opacity: 0; pointer-events: none; }
+    .spinner {
+      width: 48px; height: 48px; border-radius: 50%;
+      border: 3px solid var(--border); border-top-color: var(--blue);
+      animation: spin 0.9s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-overlay p { color: var(--muted); font-size: 0.875rem; }
+
+    /* Blocked overlay (shown after timeout) */
+    .blocked-overlay {
+      position: absolute; inset: 0;
+      background: var(--bg);
+      display: none; flex-direction: column; align-items: center; justify-content: center;
+      gap: 1.25rem; padding: 2rem; text-align: center; z-index: 11;
+    }
+    .blocked-overlay.show { display: flex; }
+    .blocked-icon {
+      width: 72px; height: 72px; border-radius: 50%;
+      background: rgba(59,130,246,0.1); border: 2px solid rgba(59,130,246,0.2);
+      display: flex; align-items: center; justify-content: center; font-size: 2rem;
+    }
+    .blocked-overlay h2 { font-size: 1.25rem; font-weight: 700; }
+    .blocked-overlay p { color: var(--muted); font-size: 0.875rem; max-width: 400px; line-height: 1.6; }
+    .btn-open {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      padding: 0.7rem 1.5rem; border-radius: 10px; font-size: 0.9rem; font-weight: 600;
+      background: linear-gradient(135deg, var(--blue), #2563eb); color: #fff;
+      text-decoration: none; border: none; cursor: pointer;
+      transition: all 0.2s; box-shadow: 0 4px 16px var(--blue-glow);
+    }
+    .btn-open:hover { transform: translateY(-2px); box-shadow: 0 8px 24px var(--blue-glow); color: #fff; }
+
+    /* Expand btn */
+    .expand-btn {
+      position: absolute; top: 12px; right: 12px; z-index: 20;
+      background: rgba(10,15,30,0.7); backdrop-filter: blur(8px);
+      border: 1px solid var(--border); color: var(--text);
+      padding: 0.4rem 0.9rem; border-radius: 8px; font-size: 0.8rem; font-weight: 600;
+      cursor: pointer; display: flex; align-items: center; gap: 0.4rem;
+      transition: all 0.2s;
+    }
+    .expand-btn:hover { background: var(--blue); border-color: var(--blue); }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      background: rgba(255,255,255,0.02);
+      border-left: 1px solid var(--border);
+      padding: 1.5rem;
+      overflow-y: auto;
+      display: flex; flex-direction: column; gap: 1.25rem;
+    }
+    @media (max-width: 900px) {
+      .sidebar { border-left: none; border-top: 1px solid var(--border); min-height: unset; }
     }
 
-    .fullscreen-button:hover {
-      background-color: rgb(20, 154, 243);
+    .sidebar-section h3 {
+      font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--muted); margin-bottom: 0.75rem;
     }
 
-    .fallback-message {
-      text-align: center;
-      padding: 2rem;
-      color: #374151;
+    /* Quick phrases */
+    .phrase-btn {
+      display: block; width: 100%; text-align: left; padding: 0.6rem 0.9rem;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; color: var(--text); font-size: 0.82rem; font-weight: 500;
+      cursor: pointer; transition: all 0.2s; margin-bottom: 0.4rem;
     }
+    .phrase-btn:hover { background: rgba(59,130,246,0.12); border-color: rgba(59,130,246,0.3); color: var(--blue); transform: translateX(3px); }
+    .phrase-btn .emoji { margin-right: 0.4rem; }
 
-    .fallback-message svg {
-      margin-bottom: 1rem;
-      color: #2563eb;
-      width: 48px;
-      height: 48px;
+    /* Tip cards */
+    .tip-card {
+      background: rgba(59,130,246,0.07); border: 1px solid rgba(59,130,246,0.15);
+      border-radius: 12px; padding: 0.9rem;
     }
-    
-.new{
-      margin: 120px 0 0 0;
-      padding: 20px 30px;
-      font-family: "Audiowide", sans-serif;
-      font-style: normal;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
-      font-size: 32px;
-      text-align: center;
-}
- .new h3 {
-      color: #2563eb;
+    .tip-card .tip-title { font-size: 0.78rem; font-weight: 700; color: var(--blue); margin-bottom: 0.35rem; }
+    .tip-card p { font-size: 0.75rem; color: var(--muted); line-height: 1.55; }
+
+    /* Link cards */
+    .link-card {
+      display: flex; align-items: center; gap: 0.75rem;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 0.75rem 0.9rem;
+      text-decoration: none; color: var(--text);
+      font-size: 0.82rem; font-weight: 500; transition: all 0.2s;
+      margin-bottom: 0.4rem;
     }
+    .link-card:hover { background: rgba(255,255,255,0.08); transform: translateX(3px); color: var(--text); }
+    .link-card .lc-icon { font-size: 1.25rem; }
+    .link-card .lc-desc { font-size: 0.7rem; color: var(--muted); }
 
-    .font{
-  text-decoration: none;
-}
-
-footer {  
-  background-color: #0B1226;
-  color: #d1d5db;
-  padding: 3rem 1.5rem 1.5rem;
-  flex-shrink: 0;
-  font-size: 0.875rem;
-}
-
-.footer-container {
-  max-width: 1280px;
-  margin: 0 auto;
-  display: grid;
-  grid-template-columns: repeat(1, 1fr);
-  gap: 2rem;
-}
-
-@media (min-width: 640px) {
-  .footer-container {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (min-width: 1024px) {
-  .footer-container {
-    grid-template-columns: repeat(4, 1fr);
-  }
-}
-
-footer .logo {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.75rem;
-}
-
-footer .logo i {
-  color: #60A5FA;
-  font-size: 1.125rem;
-}
-
-footer .logo span {
-  font-weight: 600;
-  color: white;
-  font-size: 1rem;
-}
-
-footer p.description {
-  font-size: 0.875rem;
-  line-height: 1.5;
-  max-width: 13.75rem;
-}
-
-footer .social-icons {
-  margin-top: 1rem;
-  display: flex;
-  gap: 1rem;
-  font-size: 1rem;
-  color: #9ca3af;
-}
-
-footer .social-icons a {
-  color: #9ca3af;
-  transition: color 0.2s ease-in-out;
-}
-
-footer .social-icons a:hover {
-  color: white;
-}
-
-footer h3 {
-  font-weight: 600;
-  color: white;
-  font-size: 1rem;
-  margin-bottom: 0.75rem;
-}
-
-footer ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  font-size: 0.875rem; 
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-footer ul li a {
-  color: #9ca3af;
-  text-decoration: none;
-  transition: color 0.2s ease-in-out;
-}
-
-footer ul li a:hover {
-  color: white;
-}
-
-footer hr {
-  width: 90%; 
-  max-width: 1280px;
-  margin: 2rem auto 1rem auto;
-  border: none;
-  border-top: 1px solid #6b7280;
-}
-
-footer p.copyright {
-  text-align: center;
-  color: #6b7280;
-  font-size: 0.75rem;
+    /* ── Footer ── */
+    footer {
+      background: rgba(0,0,0,0.4); border-top: 1px solid var(--border);
+      padding: 1rem 1.5rem; text-align: center; font-size: 0.78rem; color: var(--muted);
     }
-    
   </style>
-
 </head>
 <body>
-  <!-- Header -->
+
+<!-- Navbar -->
 <header>
-    <nav>
-      <a href="/" class="logo" aria-label="SignVerse Home">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor"
-          stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 text-blue-700"
-          aria-hidden="true" focusable="false">
-          <path d="m5 8 6 6"></path>
-          <path d="m4 14 6-6 2-3"></path>
-          <path d="M2 5h12"></path>
-          <path d="M7 2h1"></path>
-          <path d="m22 22-5-10-5 10"></path>
-          <path d="M14 18h6"></path>
-        </svg>
-        <span>SignVerse</span>
+  <nav>
+    <a href="/" class="logo" aria-label="SignVerse Home">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/>
+      </svg>
+      <span>SignVerse</span>
+    </a>
+    <div class="nav-links">
+      <a href="/">
+        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Home
       </a>
-      <div class="nav-links">
-        <a class="px-3 py-2 rounded-md flex items-center space-x-1 text-blue-700 font-semibold" href="/"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-languages w-5 h-5"><path d="m5 8 6 6"></path><path d="m4 14 6-6 2-3"></path><path d="M2 5h12"></path><path d="M7 2h1"></path><path d="m22 22-5-10-5 10"></path><path d="M14 18h6"></path></svg><span>Home</span></a>
-        <a class="px-3 py-2 rounded-md flex items-center space-x-1 text-gray-600 hover:text-blue-700" href="/courses"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-book w-5 h-5"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"></path></svg><span>Courses</span></a>
-        <a class="px-3 py-2 rounded-md flex items-center space-x-1 text-gray-600 hover:text-blue-700" href="/learn"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-laptop w-5 h-5"><path d="M20 16V7a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v9m16 0H4m16 0 1.28 2.55a1 1 0 0 1-.9 1.45H3.62a1 1 0 0 1-.9-1.45L4 16"></path></svg><span>Translator</span></a>
-      </div>
-    </nav>
-  </header>
-
-  <!-- Main Section -->
-   <div class="new">
-      <h3 className="text-xl font-bold text-gray-800 mb-6">Convert Text to Gesture</h3>
-     </div>
-  <main>
-    <div class="iframe-container" id="iframe-wrapper">
-     
-      <iframe
-        src="https://sign.mt/"
-        allowfullscreen
-        allow="camera; microphone"
-        id="sign-language-iframe"
-        title="Sign language translator"
-      ></iframe>
-      <button
-        class="fullscreen-button"
-        onclick="window.open('https://sign.mt/', '_blank', 'noopener,noreferrer')"
-        type="button"
-        aria-label="Open full site"
-      >
-        <i class="fa-solid fa-up-right-and-down-left-from-center"></i>
-      </button>
+      <a href="/courses">
+        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
+        Courses
+      </a>
+      <a href="/Translate.html">
+        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>
+        Text→Sign
+      </a>
+      <a href="/onlinegesture.html" class="active">
+        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0"/><path d="M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v2"/><path d="M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></svg>
+        Gesture Animator
+      </a>
+      <a href="/learn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+        Live AI
+      </a>
     </div>
-  </main>
-  
- <!-- Footer -->
-  <footer class="bg-gray-900">
-  <div class="footer-container">
-    <div >
-      <div class="logo">
-       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-languages w-8 h-8 text-blue-400"><path d="m5 8 6 6"></path><path d="m4 14 6-6 2-3"></path><path d="M2 5h12"></path><path d="M7 2h1"></path><path d="m22 22-5-10-5 10"></path><path d="M14 18h6"></path></svg>
-         <a href="/" className="text-gray-400 hover:text-white transition-colors" class="font">
-                 <span className="text-xl font-bold">SignVerse</span>
-              </a>
-      </div>
-   <p class="text-gray-400 mb-4">Breaking barriers through sign language. Learn, practice, and communicate effortlessly.</p>
-      <div class="social-icons" role="list">
-        <a href="/" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
-        <a href="/" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
-        <a href="/" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
-        <a href="https://github.com/vipin379/IPII-Project.git" aria-label="GitHub"><i class="fab fa-github"></i></a>
-      </div>
-    </div>
+  </nav>
+</header>
 
-    <div>
-      <h3>Learn</h3>
-      <ul>
-        <li><a href="/courses">Courses</a></li>
-        <li><a href="/learn">Translator</a></li>
-        <li><a href="/dashboard">Dashboard</a></li>
-        <li><a href="/">Resources</a></li>
-      </ul>
+<main>
+  <!-- Hero bar -->
+  <div class="hero-bar">
+    <div class="hero-bar-text">
+      <h1>🤟 Gesture Animator</h1>
+      <p>Powered by sign.mt — type text and watch a 3D avatar sign it in real time</p>
     </div>
-
-    <div>
-      <h3>Company</h3>
-      <ul>
-        <li><a href="/">About Us</a></li>
-        <li><a href="/">Careers</a></li>
-        <li><a href="/">Contact</a></li>
-        <li><a href="/">Blog</a></li>
-      </ul>
-    </div>
-
-    <div>
-      <h3>Support</h3>
-      <ul>
-        <li><a href="/">Help Center</a></li>
-        <li><a href="/">Privacy Policy</a></li>
-        <li><a href="/">Terms of Service</a></li>
-        <li><a href="/">Accessibility</a></li>
-      </ul>
+    <div class="hero-badges">
+      <span class="badge live">Live</span>
+      <span class="badge">🌐 3D Avatar</span>
+      <span class="badge">🔤 ASL / BSL</span>
     </div>
   </div>
-  <hr>
-  <p class="copyright">© 2025 SignWave. All rights reserved.</p>
-</footer> 
 
- <!--<footer class="bg-gray-900 text-white pt-16 pb-8"><div class="container mx-auto px-4 md:px-6"><div class="grid grid-cols-1 md:grid-cols-4 gap-8"><div class="md:col-span-1"><div class="flex items-center space-x-2 mb-4"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-languages w-8 h-8 text-blue-400"><path d="m5 8 6 6"></path><path d="m4 14 6-6 2-3"></path><path d="M2 5h12"></path><path d="M7 2h1"></path><path d="m22 22-5-10-5 10"></path><path d="M14 18h6"></path></svg> <a href="/" className="text-gray-400 hover:text-white transition-colors"><span className="text-xl font-bold">SignVerse</span></a></div>
- <p class="text-gray-400 mb-4">Breaking barriers through sign language. Learn, practice, and communicate effortlessly.</p><div class="flex space-x-4"><a href="/" class="text-gray-400 hover:text-white transition-colors"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-twitter w-5 h-5"><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"></path></svg></a><a href="/" class="text-gray-400 hover:text-white transition-colors"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-facebook w-5 h-5"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg></a><a href="/" class="text-gray-400 hover:text-white transition-colors"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-instagram w-5 h-5"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"></line></svg></a><a href="https://github.com/vipin379/IPII-Project.git" class="text-gray-400 hover:text-white transition-colors"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-github w-5 h-5"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"></path><path d="M9 18c-4.51 2-5-2-7-2"></path></svg></a></div></div><div><h3 class="text-lg font-semibold mb-4">Learn</h3><ul class="space-y-2"><li><a class="text-gray-400 hover:text-white transition-colors" href="/courses">Courses</a></li><li><a class="text-gray-400 hover:text-white transition-colors" href="/learn">Translator</a></li><li><a class="text-gray-400 hover:text-white transition-colors" href="/dashboard">Dashboard</a></li><li><a href="/" class="text-gray-400 hover:text-white transition-colors">Resources</a></li></ul></div><div><h3 class="text-lg font-semibold mb-4">Company</h3><ul class="space-y-2"><li><a href="/" class="text-gray-400 hover:text-white transition-colors">About Us</a></li><li><a href="/" class="text-gray-400 hover:text-white transition-colors">Careers</a></li><li><a href="/" class="text-gray-400 hover:text-white transition-colors">Contact</a></li><li><a href="/" class="text-gray-400 hover:text-white transition-colors">Blog</a></li></ul></div><div><h3 class="text-lg font-semibold mb-4">Support</h3><ul class="space-y-2"><li><a href="/" class="text-gray-400 hover:text-white transition-colors">Help Center</a></li><li><a href="/" class="text-gray-400 hover:text-white transition-colors">Privacy Policy</a></li><li><a href="/" class="text-gray-400 hover:text-white transition-colors">Terms of Service</a></li><li><a href="/" class="text-gray-400 hover:text-white transition-colors">Accessibility</a></li></ul></div></div><div class="border-t border-gray-800 mt-12 pt-8 text-center text-gray-500"><p>© 2025 SignWave. All rights reserved.</p></div></div></footer>-->
+  <!-- Content -->
+  <div class="content-wrap">
 
-  <!-- Scripts-->
+    <!-- Iframe panel -->
+    <div class="iframe-panel" id="iframePanel">
 
-  <script>
-    const iframe = document.getElementById('sign-language-iframe');
-    const iframeWrapper = document.getElementById('iframe-wrapper');
-    let iframeLoaded = false;
+      <!-- Loading -->
+      <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <p>Loading gesture animator…</p>
+      </div>
 
-    iframe.addEventListener('load', () => {
-      iframeLoaded = true;
-    });
+      <!-- Blocked fallback -->
+      <div class="blocked-overlay" id="blockedOverlay">
+        <div class="blocked-icon">🤟</div>
+        <h2>Open Gesture Animator</h2>
+        <p>The gesture animator runs on <strong>sign.mt</strong>. Due to browser security policies (X-Frame-Options), it may need to open in its own tab. Click below to launch it:</p>
+        <a href="https://sign.mt/" target="_blank" rel="noopener noreferrer" class="btn-open">
+          Open sign.mt ↗
+        </a>
+        <p style="font-size:0.75rem; color: var(--muted);">Tip: Keep this tab open and switch between them</p>
+      </div>
 
-    setTimeout(() => {
-      if (!iframeLoaded) {
-        iframeWrapper.innerHTML = `
-          <div class="fallback-message">
-            <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto w-12 h-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path d="M12 1v22M1 12h22" />
-            </svg>
-            <h2 class="text-xl font-semibold mb-2">Camera Access Required</h2>
-            <p class="mb-4 max-w-md mx-auto text-gray-700">
-              This app needs camera access. Please enable it in your browser settings and reload the page.
-            </p>
-            <p class="text-gray-600 max-w-md mx-auto">
-              If running locally, use <strong>https</strong> or <strong>localhost</strong> for camera to work.
-            </p>
-            <img src="https://placehold.co/400x200/png?text=Camera+Access+Required" alt="Enable camera access illustration" class="mx-auto mt-6 rounded-lg shadow-md" />
-          </div>
-        `;
-      }
-    }, 5000);
-  </script>
+      <iframe
+        id="sign-language-iframe"
+        src="https://rylo.com/sign/translate/"
+        allowfullscreen
+        allow="camera; microphone; autoplay"
+        title="Sign language gesture animator"
+        sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
+      ></iframe>
 
+      <button class="expand-btn" onclick="window.open('https://rylo.com/sign/translate/', '_blank', 'noopener')">
+        ⛶ Open Full
+      </button>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+
+      <!-- Quick phrases -->
+      <div class="sidebar-section">
+        <h3>⚡ Quick Phrases</h3>
+        <button class="phrase-btn" onclick="tryPhrase(this)"><span class="emoji">👋</span>Hello, how are you?</button>
+        <button class="phrase-btn" onclick="tryPhrase(this)"><span class="emoji">🙏</span>Thank you very much</button>
+        <button class="phrase-btn" onclick="tryPhrase(this)"><span class="emoji">😊</span>Nice to meet you</button>
+        <button class="phrase-btn" onclick="tryPhrase(this)"><span class="emoji">❓</span>What is your name?</button>
+        <button class="phrase-btn" onclick="tryPhrase(this)"><span class="emoji">🏠</span>I live in India</button>
+        <button class="phrase-btn" onclick="tryPhrase(this)"><span class="emoji">❤️</span>I love you</button>
+        <button class="phrase-btn" onclick="tryPhrase(this)"><span class="emoji">✅</span>Yes, please</button>
+        <button class="phrase-btn" onclick="tryPhrase(this)"><span class="emoji">🚫</span>No, thank you</button>
+      </div>
+
+      <!-- Tips -->
+      <div class="sidebar-section">
+        <h3>💡 Tips</h3>
+        <div class="tip-card">
+          <div class="tip-title">Type in the animator</div>
+          <p>Click inside the gesture window and type your text. The avatar will sign it automatically.</p>
+        </div>
+        <br/>
+        <div class="tip-card" style="background: rgba(139,92,246,0.07); border-color: rgba(139,92,246,0.15);">
+          <div class="tip-title" style="color: #a78bfa;">Speed Control</div>
+          <p>sign.mt has a speed slider — slow it down to study each individual sign carefully.</p>
+        </div>
+      </div>
+
+      <!-- More tools -->
+      <div class="sidebar-section">
+        <h3>🛠 More Tools</h3>
+        <a href="/Translate.html" class="link-card">
+          <span class="lc-icon">🔤</span>
+          <div><div>Text → Sign Images</div><div class="lc-desc">See each letter as a real hand photo</div></div>
+        </a>
+        <a href="/learn" class="link-card">
+          <span class="lc-icon">📷</span>
+          <div><div>Live AI Translator</div><div class="lc-desc">Camera reads your gestures → text</div></div>
+        </a>
+        <a href="/Fingerspelling.html" class="link-card">
+          <span class="lc-icon">🎮</span>
+          <div><div>Fingerspelling Game</div><div class="lc-desc">Practice and test your ASL skills</div></div>
+        </a>
+        <a href="/courses" class="link-card">
+          <span class="lc-icon">📚</span>
+          <div><div>Courses</div><div class="lc-desc">Structured ASL lessons</div></div>
+        </a>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer>© 2025 SignVerse. Gesture animation powered by <a href="https://sign.mt/" target="_blank" style="color: var(--blue);">sign.mt</a></footer>
+
+<script>
+  const iframe = document.getElementById('sign-language-iframe');
+  const loading = document.getElementById('loadingOverlay');
+
+  // Hide loading once iframe fires load
+  iframe.addEventListener('load', () => {
+    loading.classList.add('hidden');
+  });
+
+  // Quick-phrase buttons — try to focus iframe and dispatch typing
+  function tryPhrase(btn) {
+    const text = btn.textContent.replace(/^[^\w]+/, '').trim();
+    // Attempt to put text in clipboard so user can paste
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(text).then(() => {
+        btn.style.background = 'rgba(34,197,94,0.15)';
+        btn.style.borderColor = 'rgba(34,197,94,0.3)';
+        btn.style.color = '#4ade80';
+        const orig = btn.textContent;
+        btn.textContent = '✅ Copied! Paste in the animator';
+        setTimeout(() => {
+          btn.textContent = orig;
+          btn.style.background = '';
+          btn.style.borderColor = '';
+          btn.style.color = '';
+        }, 2500);
+      });
+    }
+  }
+</script>
 </body>
 </html>

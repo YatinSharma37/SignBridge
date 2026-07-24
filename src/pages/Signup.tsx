@@ -7,7 +7,7 @@ import { Link } from 'react-router-dom';
 const Signup: React.FC = () => {
   return (
     <MainLayout>
-      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-blue-50 pt-20 pb-10">
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-blue-50 dark:from-[#0a0f1e] dark:to-[#0d1424] pt-20 pb-10">
         <div className="container mx-auto px-4 py-12">
           <div className="max-w-6xl mx-auto">
             <div className="flex flex-col lg:flex-row shadow-xl rounded-xl overflow-hidden">

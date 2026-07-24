@@ -44,9 +44,9 @@ const LoginForm: React.FC = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="bg-white p-8 rounded-xl shadow-lg"
+        className="bg-white dark:bg-slate-800 p-8 rounded-xl shadow-lg"
       >
-        <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">Welcome Back</h2>
+        <h2 className="text-2xl font-bold mb-6 text-center text-gray-800 dark:text-white">Welcome Back</h2>
 
         {errorMessage && (
           <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md">
@@ -56,15 +56,15 @@ const LoginForm: React.FC = () => {
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
               Email Address
             </label>
             <input
               id="email"
               type="email"
               className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
-                errors.email ? 'border-red-500' : 'border-gray-300'
-              }`}
+                errors.email ? 'border-red-500' : 'border-gray-300 dark:border-slate-600'
+              } dark:bg-slate-700/50 dark:text-white`}
               placeholder="johndoe@example.com"
               {...register('email', {
                 required: 'Email is required',
@@ -81,7 +81,7 @@ const LoginForm: React.FC = () => {
 
           <div>
             <div className="flex justify-between items-center mb-1">
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-slate-300">
                 Password
               </label>
               <a href="#" className="text-sm text-blue-600 hover:text-blue-800">
@@ -93,8 +93,8 @@ const LoginForm: React.FC = () => {
                 id="password"
                 type={showPassword ? 'text' : 'password'}
                 className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
-                  errors.password ? 'border-red-500' : 'border-gray-300'
-                }`}
+                  errors.password ? 'border-red-500' : 'border-gray-300 dark:border-slate-600'
+                } dark:bg-slate-700/50 dark:text-white`}
                 placeholder="********"
                 {...register('password', {
                   required: 'Password is required',
@@ -123,7 +123,7 @@ const LoginForm: React.FC = () => {
               type="checkbox"
               className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
             />
-            <label htmlFor="remember" className="ml-2 block text-sm text-gray-700">
+            <label htmlFor="remember" className="ml-2 block text-sm text-gray-700 dark:text-slate-300">
               Remember me
             </label>
           </div>
@@ -140,7 +140,7 @@ const LoginForm: React.FC = () => {
         </form>
 
         <div className="mt-6 text-center">
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-gray-600 dark:text-slate-400">
             Don't have an account?{' '}
             <a
               href="/signup"

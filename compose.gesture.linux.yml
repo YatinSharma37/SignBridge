@@ -1,0 +1,10 @@
+services:
+  gesture-service:
+    build:
+      context: ./Gesture
+      dockerfile: Dockerfile.linux
+    ports:
+      - "5000:5000"
+    devices:
+      - "/dev/video0:/dev/video0"
+    restart: unless-stopped

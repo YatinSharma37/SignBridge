@@ -1,0 +1,10 @@
+services:
+  gesture-service:
+    build:
+      context: ./Gesture
+    ports:
+      - "5000:5000"
+    # Linux hosts: pass the host camera to OpenCV in the container.
+    devices:
+      - "/dev/video0:/dev/video0"
+    restart: unless-stopped

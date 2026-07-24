@@ -1,0 +1,39 @@
+# Node.js dependencies and generated build output
+node_modules/
+dist/
+
+# Environment files and logs
+.env
+.env.*
+!.env.example
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Editor and operating-system files
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Python bytecode, virtual environments, and test output
+__pycache__/
+*.py[cod]
+*.so
+.pytest_cache/
+.mypy_cache/
+.venv/
+venv/
+env/
+
+# Generated gesture-training images and converted model artifacts
+Gesture/Data/
+Gesture/converted_keras/
+
+# Deployment/tooling artifacts
+.railway/
+.render/

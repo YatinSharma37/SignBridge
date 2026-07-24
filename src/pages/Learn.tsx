@@ -1,111 +1,396 @@
-import { useRef, useState, useEffect } from "react";  
+import { useRef, useState, useEffect, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Camera,
+  CameraOff,
+  Copy,
+  Volume2,
+  RotateCcw,
+  Wifi,
+  WifiOff,
+  Info,
+  CheckCircle,
+} from "lucide-react";
 
-// add useEffect but its not initialized
+const FLASK_BASE = "http://localhost:5000";
+const POLL_INTERVAL = 800; // ms
 
 export default function SignLanguageTranslator() {
-  const videoRef = useRef(null);
-  const [streamStarted, setStreamStarted] = useState(false);
+  // ── backend connectivity ──────────────────────────────────────────
+  const [backendOnline, setBackendOnline] = useState<boolean | null>(null); // null = checking
+  const [checkingBackend, setCheckingBackend] = useState(true);
 
-  const startCamera = () => {
-    navigator.mediaDevices.getUserMedia({ video: true, audio: false })
-      .then((stream) => {
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-        }
-        setStreamStarted(true);
-      })
-      .catch((err) => {
-        console.error("Error accessing camera: ", err);
-        alert("Unable to access the camera. Please allow permission in your browser.");
+  // ── recognized text ───────────────────────────────────────────────
+  const [recognizedText, setRecognizedText] = useState("");
+  const [copied, setCopied] = useState(false);
+
+  // ── refs ──────────────────────────────────────────────────────────
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const imgRef = useRef<HTMLImageElement>(null);
+
+  // ── check if flask backend is reachable ───────────────────────────
+  const checkBackend = useCallback(async () => {
+    setCheckingBackend(true);
+    try {
+      const res = await fetch(`${FLASK_BASE}/recognized_text`, {
+        signal: AbortSignal.timeout(2000),
       });
-  };
+      if (res.ok) {
+        setBackendOnline(true);
+      } else {
+        setBackendOnline(false);
+      }
+    } catch {
+      setBackendOnline(false);
+    } finally {
+      setCheckingBackend(false);
+    }
+  }, []);
 
   useEffect(() => {
-  if (!streamStarted) {
-    startCamera();
-  }
-}, [streamStarted]);
+    checkBackend();
+  }, [checkBackend]);
 
+  // ── poll recognized text when backend is online ───────────────────
+  useEffect(() => {
+    if (!backendOnline) {
+      if (pollRef.current) clearInterval(pollRef.current);
+      return;
+    }
+
+    const poll = async () => {
+      try {
+        const res = await fetch(`${FLASK_BASE}/recognized_text`);
+        if (res.ok) {
+          const data = await res.json();
+          setRecognizedText(data.text || "");
+        }
+      } catch {
+        // backend went offline while polling
+        setBackendOnline(false);
+      }
+    };
+
+    poll();
+    pollRef.current = setInterval(poll, POLL_INTERVAL);
+    return () => {
+      if (pollRef.current) clearInterval(pollRef.current);
+    };
+  }, [backendOnline]);
+
+  // ── reset recognized text via flask api ───────────────────────────
+  const handleReset = async () => {
+    if (!backendOnline) return;
+    try {
+      await fetch(`${FLASK_BASE}/reset_text`, { method: "POST" });
+      setRecognizedText("");
+    } catch {
+      setRecognizedText("");
+    }
+  };
+
+  // ── copy to clipboard ─────────────────────────────────────────────
+  const handleCopy = () => {
+    if (!recognizedText) return;
+    navigator.clipboard.writeText(recognizedText).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
+  // ── text-to-speech ────────────────────────────────────────────────
+  const handleSpeak = () => {
+    if (!recognizedText || !("speechSynthesis" in window)) return;
+    const utterance = new SpeechSynthesisUtterance(recognizedText);
+    window.speechSynthesis.speak(utterance);
+  };
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <header className="fixed top-0 left-0 w-full bg-white border-b border-gray-200 z-50">
-        <nav className="max-w-[1515px] mx-auto px-4 h-16 flex items-center justify-between">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900">
+      {/* ── Navbar ── */}
+      <header className="fixed top-0 left-0 w-full bg-slate-900/80 backdrop-blur-md border-b border-white/10 z-50">
+        <nav className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
           <a href="/" className="flex items-center gap-2 no-underline" aria-label="SignVerse Home">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6 text-blue-700"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>
-            <span className="text-xl font-bold text-gray-900">SignVerse</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none"
+              stroke="#60a5fa" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="m5 8 6 6" /><path d="m4 14 6-6 2-3" /><path d="M2 5h12" />
+              <path d="M7 2h1" /><path d="m22 22-5-10-5 10" /><path d="M14 18h6" />
+            </svg>
+            <span className="text-xl font-bold text-white">SignVerse</span>
           </a>
           <div className="hidden md:flex items-center gap-6">
-            <a href="/" className="px-3 py-2 rounded-md flex items-center space-x-1 text-blue-700 font-semibold">
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>
-              <span>Home</span>
-            </a>
-            <a href="/courses" className="px-3 py-2 rounded-md flex items-center space-x-1 text-gray-600 hover:text-blue-700">
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
-              <span>Courses</span>
-            </a>
-            <a href="/gesture.html" className="px-3 py-2 rounded-md flex items-center space-x-1 text-gray-600 hover:text-blue-700">
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M20 16V7a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v9m16 0H4m16 0 1.28 2.55a1 1 0 0 1-.9 1.45H3.62a1 1 0 0 1-.9-1.45L4 16"/></svg>
-              <span>Translator</span>
-            </a>
+            <a href="/" className="text-gray-400 hover:text-white transition-colors text-sm">Home</a>
+            <a href="/courses" className="text-gray-400 hover:text-white transition-colors text-sm">Courses</a>
+            <a href="/learn" className="text-blue-400 font-semibold text-sm">Translator</a>
+            <a href="/dashboard" className="text-gray-400 hover:text-white transition-colors text-sm">Dashboard</a>
           </div>
         </nav>
       </header>
 
-      <main className="flex-grow pt-24 px-4 bg-gradient-to-br from-gray-100 via-yellow-100 to-pink-100 flex justify-center items-center">
-        <div className="w-full max-w-md mx-auto bg-white p-4 rounded-lg shadow-lg flex flex-col items-center justify-center space-y-4">
-          <h2 className="text-xl font-bold text-gray-800">Translator</h2>
+      {/* ── Main ── */}
+      <main className="flex-grow pt-24 pb-16 px-4">
+        <div className="max-w-6xl mx-auto">
 
-          {!streamStarted ? (
-            <>
-              <p className="text-gray-500 text-sm">Click the button below to enable the camera.</p>
-              <button
-                onClick={startCamera}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-              >
-                Allow Camera
-              </button>
-            </>
-          ) : (
-            <video ref={videoRef} autoPlay playsInline className="rounded-lg border border-gray-300 w-full h-auto"></video>
-          )}
+          {/* Page title */}
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="text-center mb-10"
+          >
+            <h1 className="text-4xl md:text-5xl font-bold text-white mb-3">
+              Sign Language{" "}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">
+                Translator
+              </span>
+            </h1>
+            <p className="text-gray-400 text-lg max-w-2xl mx-auto">
+              Show ASL signs to the camera — our AI model converts your gestures to text in real time.
+            </p>
+          </motion.div>
+
+          {/* ── Backend status banner ── */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className={`flex items-center gap-3 mb-6 px-5 py-3 rounded-xl border text-sm font-medium ${
+              checkingBackend
+                ? "bg-yellow-500/10 border-yellow-500/30 text-yellow-300"
+                : backendOnline
+                ? "bg-green-500/10 border-green-500/30 text-green-300"
+                : "bg-red-500/10 border-red-500/30 text-red-300"
+            }`}
+          >
+            {checkingBackend ? (
+              <>
+                <div className="w-4 h-4 rounded-full border-2 border-yellow-300 border-t-transparent animate-spin" />
+                Checking connection to gesture recognition engine…
+              </>
+            ) : backendOnline ? (
+              <>
+                <Wifi className="w-4 h-4" />
+                AI Engine connected — gesture recognition is live!
+              </>
+            ) : (
+              <>
+                <WifiOff className="w-4 h-4" />
+                AI Engine offline.&nbsp;
+                <span className="font-normal text-red-200">
+                  Start the Python server:&nbsp;
+                  <code className="bg-red-900/40 px-2 py-0.5 rounded font-mono text-xs">
+                    cd Gesture &amp;&amp; python test.py
+                  </code>
+                  &nbsp;then&nbsp;
+                  <button
+                    onClick={checkBackend}
+                    className="underline hover:no-underline cursor-pointer"
+                  >
+                    retry
+                  </button>
+                </span>
+              </>
+            )}
+          </motion.div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+            {/* ── Left: Video feed ── */}
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl overflow-hidden"
+            >
+              <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
+                <div className="flex items-center gap-2 text-white font-semibold">
+                  <Camera className="w-5 h-5 text-blue-400" />
+                  Camera Feed
+                </div>
+                {backendOnline && (
+                  <span className="flex items-center gap-1.5 text-xs text-green-400">
+                    <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                    LIVE
+                  </span>
+                )}
+              </div>
+
+              <div className="relative aspect-video bg-slate-900 flex items-center justify-center">
+                {backendOnline ? (
+                  /* Flask streams processed video with bounding boxes */
+                  <img
+                    ref={imgRef}
+                    src={`${FLASK_BASE}/video_feed`}
+                    alt="Live gesture recognition feed"
+                    className="w-full h-full object-cover"
+                    onError={() => setBackendOnline(false)}
+                  />
+                ) : (
+                  <OfflineCamera />
+                )}
+              </div>
+            </motion.div>
+
+            {/* ── Right: Translation output ── */}
+            <motion.div
+              initial={{ opacity: 0, x: 30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="flex flex-col gap-4"
+            >
+              {/* Output box */}
+              <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl flex-1 flex flex-col">
+                <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
+                  <span className="text-white font-semibold">Recognized Text</span>
+                  <div className="flex items-center gap-2">
+                    <ActionBtn
+                      onClick={handleReset}
+                      disabled={!backendOnline || !recognizedText}
+                      title="Clear"
+                    >
+                      <RotateCcw className="w-4 h-4" />
+                    </ActionBtn>
+                    <ActionBtn
+                      onClick={handleSpeak}
+                      disabled={!recognizedText}
+                      title="Speak"
+                    >
+                      <Volume2 className="w-4 h-4" />
+                    </ActionBtn>
+                    <ActionBtn
+                      onClick={handleCopy}
+                      disabled={!recognizedText}
+                      title="Copy"
+                    >
+                      <AnimatePresence mode="wait">
+                        {copied ? (
+                          <motion.span key="check" initial={{ scale: 0 }} animate={{ scale: 1 }}>
+                            <CheckCircle className="w-4 h-4 text-green-400" />
+                          </motion.span>
+                        ) : (
+                          <motion.span key="copy" initial={{ scale: 0 }} animate={{ scale: 1 }}>
+                            <Copy className="w-4 h-4" />
+                          </motion.span>
+                        )}
+                      </AnimatePresence>
+                    </ActionBtn>
+                  </div>
+                </div>
+
+                <div className="flex-1 p-5 min-h-[180px]">
+                  {recognizedText ? (
+                    <motion.p
+                      key={recognizedText}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="text-white text-xl leading-relaxed tracking-wide font-medium"
+                    >
+                      {recognizedText}
+                    </motion.p>
+                  ) : (
+                    <div className="h-full flex flex-col items-center justify-center text-gray-500 text-sm text-center gap-2">
+                      {backendOnline ? (
+                        <>
+                          <div className="w-8 h-8 rounded-full border-2 border-blue-500 border-t-transparent animate-spin mb-1" />
+                          Waiting for gestures…
+                          <span className="text-xs">Show an ASL sign to the camera</span>
+                        </>
+                      ) : (
+                        <>
+                          <CameraOff className="w-8 h-8 text-gray-600" />
+                          Start the Python backend to enable live translation
+                        </>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* How it works */}
+              <div className="bg-blue-500/10 border border-blue-500/20 rounded-2xl p-5">
+                <div className="flex items-center gap-2 text-blue-300 font-semibold mb-3">
+                  <Info className="w-4 h-4" />
+                  How it works
+                </div>
+                <ol className="text-gray-400 text-sm space-y-2 list-none">
+                  {[
+                    "Start the Python server inside the Gesture/ folder",
+                    "Allow camera access when prompted",
+                    "Hold an ASL sign steady for ~1 second",
+                    "The recognized word/letter appears in the output box",
+                    "Use Speak to hear the translated text aloud",
+                  ].map((step, i) => (
+                    <li key={i} className="flex items-start gap-3">
+                      <span className="flex-shrink-0 w-5 h-5 rounded-full bg-blue-500/20 text-blue-400 text-xs flex items-center justify-center font-bold mt-0.5">
+                        {i + 1}
+                      </span>
+                      {step}
+                    </li>
+                  ))}
+                </ol>
+              </div>
+
+              {/* Quick-start command */}
+              <div className="bg-slate-800/60 border border-white/10 rounded-2xl p-5">
+                <p className="text-gray-400 text-xs uppercase tracking-widest mb-2">
+                  Start the AI engine
+                </p>
+                <code className="text-green-300 text-sm font-mono block">
+                  cd Gesture &amp;&amp; pip install flask cvzone tensorflow opencv-python &amp;&amp; python test.py
+                </code>
+              </div>
+            </motion.div>
+          </div>
         </div>
       </main>
 
-      <footer className="bg-gray-900 text-white pt-16 pb-8">
-        <div className="container mx-auto px-4 md:px-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div className="md:col-span-1">
-              <div className="flex items-center space-x-2 mb-4">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8 text-blue-400"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>
-                <span className="text-xl font-bold">SignVerse</span>
-              </div>
-              <p className="text-gray-400 mb-4">Breaking barriers through sign language. Learn, practice, and communicate effortlessly.</p>
-              <div className="flex space-x-4">
-              
-  <div className="flex justify-center space-x-4 mb-2">
-    <a href="/" className="text-gray-400 hover:text-white transition-colors">
-     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="lucide lucide-twitter w-5 h-5"><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"></path></svg></a>
-    <a href="/" className="text-gray-400 hover:text-white transition-colors">
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="lucide lucide-facebook w-5 h-5"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg> </a>
-    <a href="/" className="text-gray-400 hover:text-white transition-colors">
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="lucide lucide-instagram w-5 h-5"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"></line></svg> </a>
-    <a href="https://github.com/vipin379/IP-II-Project.git" className="text-gray-400 hover:text-white transition-colors">
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="lucide lucide-github w-5 h-5"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"></path><path d="M9 18c-4.51 2-5-2-7-2"></path></svg> </a>
-  </div>
-  
-              </div>
-            </div>
-            {/* Footer Links */}
-            <div><h3 className="text-lg font-semibold mb-4">Learn</h3><ul className="space-y-2"><li><a className="text-gray-400 hover:text-white" href="/courses">Courses</a></li><li><a className="text-gray-400 hover:text-white" href="/learn">Translator</a></li><li><a className="text-gray-400 hover:text-white" href="/dashboard">Dashboard</a></li><li><a href="/" className="text-gray-400 hover:text-white">Resources</a></li></ul></div>
-            <div><h3 className="text-lg font-semibold mb-4">Company</h3><ul className="space-y-2"><li><a href="/" className="text-gray-400 hover:text-white">About Us</a></li><li><a href="/" className="text-gray-400 hover:text-white">Careers</a></li><li><a href="/" className="text-gray-400 hover:text-white">Contact</a></li><li><a href="/" className="text-gray-400 hover:text-white">Blog</a></li></ul></div>
-            <div><h3 className="text-lg font-semibold mb-4">Support</h3><ul className="space-y-2"><li><a href="/" className="text-gray-400 hover:text-white">Help Center</a></li><li><a href="/" className="text-gray-400 hover:text-white">Privacy Policy</a></li><li><a href="/" className="text-gray-400 hover:text-white">Terms of Service</a></li><li><a href="/" className="text-gray-400 hover:text-white">Accessibility</a></li></ul></div>
-          </div>
-          <div className="border-t border-gray-800 mt-12 pt-8 text-center text-gray-500">
-            <p>© 2025 SignWave. All rights reserved.</p>
-          </div>
-        </div>
+      {/* ── Footer ── */}
+      <footer className="bg-slate-900 border-t border-white/10 text-gray-500 py-6 text-center text-sm">
+        © 2025 SignVerse. All rights reserved.
       </footer>
+    </div>
+  );
+}
+
+/* ── Small helpers ── */
+function ActionBtn({
+  children,
+  onClick,
+  disabled,
+  title,
+}: {
+  children: React.ReactNode;
+  onClick: () => void;
+  disabled?: boolean;
+  title: string;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      title={title}
+      className={`p-2 rounded-lg transition-colors ${
+        disabled
+          ? "text-gray-600 cursor-not-allowed"
+          : "text-gray-300 hover:bg-white/10 hover:text-white"
+      }`}
+    >
+      {children}
+    </button>
+  );
+}
+
+function OfflineCamera() {
+  return (
+    <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 text-center px-6">
+      <div className="w-20 h-20 rounded-full bg-slate-800 flex items-center justify-center">
+        <CameraOff className="w-10 h-10 text-gray-600" />
+      </div>
+      <div>
+        <p className="text-gray-400 font-medium">AI Engine not running</p>
+        <p className="text-gray-600 text-sm mt-1">
+          Start the Python Flask server to see the live gesture feed
+        </p>
+      </div>
     </div>
   );
 }

@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.git/
+.agents/
+.codex/
+.vscode/
+Gesture/Data/
+Gesture/converted_keras/
+Gesture/__pycache__/
+*.py[cod]
+.env
+.env.*
+*.log
+npm-debug.log*
